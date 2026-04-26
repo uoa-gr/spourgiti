@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "mcp__plugin_github_github__get_me",
-      "mcp__plugin_github_github__create_repository"
-    ]
-  }
-}

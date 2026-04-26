@@ -19,3 +19,5 @@ coverage/
 apps/desktop/dist/
 apps/renderer/dist/
 release-builds/
+# Claude Code session-local config
+.claude/
