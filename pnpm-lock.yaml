@@ -44,6 +44,9 @@ importers:
       '@spourgiti/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@spourgiti/updater-config':
+        specifier: workspace:*
+        version: link:../../packages/updater-config
       better-sqlite3:
         specifier: ^11.5.0
         version: 11.10.0
