@@ -5,7 +5,10 @@ const common = {
   platform: 'node',
   target: 'node20',
   format: 'cjs',
-  external: ['electron', 'better-sqlite3', 'electron-updater'],
+  // Only true natives stay external. electron is provided by the runtime;
+  // better-sqlite3 ships a .node binding (asarUnpack handles it). All other
+  // deps are pure JS and bundle cleanly, sidestepping pnpm symlink fragility.
+  external: ['electron', 'better-sqlite3'],
   sourcemap: true,
   outdir: 'dist',
   logLevel: 'info',
