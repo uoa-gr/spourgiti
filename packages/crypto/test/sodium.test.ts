@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getSodium } from '../src/sodium.js';
+import { getSodium } from '../src/sodium-public.js';
 
 describe('getSodium', () => {
   it('resolves to the libsodium instance with crypto_box constants available', async () => {

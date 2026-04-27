@@ -4,7 +4,7 @@ import {
   ed25519PublicToX25519,
   ed25519SecretToX25519,
 } from '../src/keys.js';
-import { getSodium } from '../src/sodium.js';
+import { getSodium } from '../src/sodium-public.js';
 
 describe('generateIdentityKeyPair', () => {
   it('returns a 32-byte public key and 64-byte secret key', async () => {

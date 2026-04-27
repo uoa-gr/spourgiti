@@ -1,19 +1,34 @@
 {
   "name": "@spourgiti/crypto",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "browser": "./src/index.ts",
+      "node":    "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./sodium": {
+      "browser": "./src/sodium.browser.ts",
+      "node":    "./src/sodium.node.ts",
+      "default": "./src/sodium.node.ts"
+    }
+  },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "test:browser": "vitest run --config vitest.browser.config.ts --passWithNoTests"
   },
   "dependencies": {
     "libsodium-wrappers": "^0.7.15"
   },
   "devDependencies": {
     "@types/libsodium-wrappers": "^0.7.14",
+    "@vitest/browser": "^2.1.4",
+    "playwright": "^1.48.0",
     "typescript": "^5.6.3",
     "vitest": "^2.1.4"
   }

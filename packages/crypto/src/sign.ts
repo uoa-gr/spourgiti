@@ -1,4 +1,4 @@
-import { getSodium } from './sodium.js';
+import { getSodium } from './sodium-public.js';
 
 export async function signDetached(
   message: Uint8Array,

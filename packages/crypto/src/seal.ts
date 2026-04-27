@@ -1,4 +1,4 @@
-import { getSodium } from './sodium.js';
+import { getSodium } from './sodium-public.js';
 
 /**
  * Wrap a symmetric key for a recipient using their X25519 public key.

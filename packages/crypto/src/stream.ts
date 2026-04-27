@@ -1,4 +1,4 @@
-import { getSodium } from './sodium.js';
+import { getSodium } from './sodium-public.js';
 
 export interface StreamEncryptResult {
   header: Uint8Array;

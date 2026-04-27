@@ -1,4 +1,4 @@
-export * from './sodium.js';
+export * from './sodium-public.js';
 export * from './random.js';
 export * from './keys.js';
 export * from './sign.js';
