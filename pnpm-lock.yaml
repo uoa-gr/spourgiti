@@ -124,6 +124,13 @@ importers:
         version: 2.1.9(@types/node@20.19.39)(@vitest/browser@2.1.9)(msw@2.13.6(@types/node@20.19.39)(typescript@5.9.3))
 
   packages/transfer:
+    dependencies:
+      '@spourgiti/crypto':
+        specifier: workspace:*
+        version: link:../crypto
+      '@spourgiti/shared':
+        specifier: workspace:*
+        version: link:../shared
     devDependencies:
       typescript:
         specifier: ^5.6.3
