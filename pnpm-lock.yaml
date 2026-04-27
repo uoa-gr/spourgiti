@@ -141,6 +141,9 @@ importers:
 
   packages/keystore:
     devDependencies:
+      electron:
+        specifier: ^32.2.0
+        version: 32.3.3
       typescript:
         specifier: ^5.6.3
         version: 5.9.3
