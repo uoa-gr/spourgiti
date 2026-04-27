@@ -1,13 +1,72 @@
-import { APP_VERSION } from '@liaskos/shared';
+import { useEffect, useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { useCryptoStore } from './store/cryptoContext.js';
+import { bindAuthSessionToCryptoStore } from './auth/session-listener.js';
+import { getSupabaseClient } from '@liaskos/supabase-client';
+import { Login } from './routes/Login.js';
+import { SignUp } from './routes/SignUp.js';
+import { RecoveryCode } from './routes/RecoveryCode.js';
+import { Recovery } from './routes/Recovery.js';
+import { Unlock } from './routes/Unlock.js';
+import { ProtectedShell } from './routes/ProtectedShell.js';
+import { Inbox } from './routes/Inbox.js';
+import { Outbox } from './routes/Outbox.js';
+import { Send } from './routes/Send.js';
+
+function useSessionActive(): boolean | 'loading' {
+  const [v, setV] = useState<boolean | 'loading'>('loading');
+  useEffect(() => {
+    const sb = getSupabaseClient();
+    let mounted = true;
+    sb.auth.getSession().then(({ data }) => {
+      if (mounted) setV(Boolean(data.session));
+    });
+    const sub = sb.auth.onAuthStateChange((_event, session) => {
+      if (mounted) setV(Boolean(session));
+    });
+    return () => {
+      mounted = false;
+      sub.data.subscription.unsubscribe();
+    };
+  }, []);
+  return v;
+}
+
+function Protected() {
+  const session = useSessionActive();
+  const cryptoStatus = useCryptoStore((s) => s.state.status);
+  if (session === 'loading') return null;
+  if (!session) return <Navigate to="/login" replace />;
+  if (cryptoStatus !== 'unlocked') return <Unlock />;
+  return <Outlet />;
+}
 
 export function App() {
+  useEffect(() => {
+    bindAuthSessionToCryptoStore();
+  }, []);
+
+  // Vite respects PAGES_BASE_URL at build; on GitHub Pages, BrowserRouter
+  // needs the same basename so client routes resolve under /file-exchange/.
+  const basename = (import.meta.env.BASE_URL || '/').replace(/\/$/, '') || undefined;
+
   return (
-    <main style={{ fontFamily: '"EB Garamond", Garamond, "Times New Roman", serif', padding: '4rem 2rem', maxWidth: 720, margin: '0 auto', backgroundColor: '#f6f1e7', color: '#1a1a1a', minHeight: '100vh' }}>
-      <h1 style={{ fontFamily: '"Cormorant Garamond", Garamond, serif', fontWeight: 600 }}>File Exchange</h1>
-      <p>End-to-end encrypted file sharing. Web edition v{APP_VERSION}.</p>
-      <p style={{ color: '#5a5a5a' }}>
-        The real UI lands in Plans 3c–3f. This page exists to prove the build chain works end-to-end.
-      </p>
-    </main>
+    <BrowserRouter basename={basename}>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="/signup/recovery-code" element={<RecoveryCode />} />
+        <Route path="/recovery" element={<Recovery />} />
+        <Route element={<Protected />}>
+          <Route element={<ProtectedShell />}>
+            <Route path="/inbox" element={<Inbox />} />
+            <Route path="/outbox" element={<Outbox />} />
+            <Route path="/send" element={<Send />} />
+            <Route path="/" element={<Navigate to="/inbox" replace />} />
+          </Route>
+        </Route>
+        <Route path="*" element={<Navigate to="/inbox" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
