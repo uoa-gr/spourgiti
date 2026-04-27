@@ -1,0 +1,8 @@
+# Supabase CLI config. Local-stack support comes in Plan 3f; for now this
+# file just records the linked project ID for `supabase link` if anyone runs
+# the CLI locally.
+
+project_id = "yycijtldadobazdjgfvj"
+
+[db]
+major_version = 17

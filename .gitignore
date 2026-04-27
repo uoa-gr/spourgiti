@@ -23,3 +23,5 @@ release-builds/
 .claude/
 # Allow Electron app resources
 !apps/desktop/build/
+# Test-only secrets (never commit)
+.env.test
