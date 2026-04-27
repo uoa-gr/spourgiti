@@ -23,7 +23,10 @@ win:
   target:
     - target: nsis
       arch: [x64]
-  artifactName: "Spourgiti-Setup-${version}.${ext}"
+    - target: portable
+      arch: [x64]
+    - target: zip
+      arch: [x64]
   certificateFile: null
   # Code-signing slot. Absent env vars -> unsigned build proceeds.
   # When ready, set WIN_CSC_LINK + WIN_CSC_KEY_PASSWORD in CI secrets.
@@ -32,6 +35,11 @@ nsis:
   perMachine: false
   allowToChangeInstallationDirectory: true
   deleteAppDataOnUninstall: false
+  artifactName: "Spourgiti-Setup-${version}.${ext}"
+  differentialPackage: false
+portable:
+  artifactName: "Spourgiti-Portable-${version}.${ext}"
+# zip artifact name uses default: Spourgiti-${version}-win.zip
 mac:
   category: public.app-category.productivity
   target:
