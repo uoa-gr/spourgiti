@@ -612,10 +612,46 @@ A `desktop-archive` git tag is pushed before the cutover so the Electron-era cod
 
 ## 11. Build, deploy, "auto-update"
 
-- Push to `main` → GitHub Actions runs `pnpm install && pnpm typecheck && pnpm test` (incl. Vitest browser), runs `supabase start` for an integration-test job, on green Vercel deploys.
-- Migrations: `supabase db push` from CI against the `spourgiti-send` project.
+- Push to `main` → GitHub Actions runs `pnpm install && pnpm typecheck && pnpm test` (incl. Vitest browser), runs the `supabase-client` integration tests against the live `spourgiti-send` project, on green Vercel deploys (preview per PR, production from `main`).
+- Migrations: `supabase db push` from CI against the `spourgiti-send` project. (Plan 3f wires this; Plan 3b applies migrations via the Supabase MCP and commits the SQL files to git.)
 - Auto-update is browser cache-busting on the new bundle hash. No installers, no signing, no updater package.
 - **SRI on the bundle entry chunk + a published bundle hash is v2 work** (documented in §3 as a known trust assumption: a compromised Vercel can push a malicious SPA).
+
+### 11.1 Vercel-native telemetry (added 2026-04-28)
+
+Two Vercel-provided libraries get mounted in `apps/send` at production-build time:
+
+- **`@vercel/analytics`** — page-view + custom-event tracking. Cookieless and privacy-respecting per Vercel's stated GDPR posture. Mounted as `<Analytics />` inside the React tree.
+- **`@vercel/speed-insights`** — Web Vitals (LCP, INP, CLS, TTFB, FCP). Mounted as `<SpeedInsights />`.
+
+**Privacy posture for v1:**
+- Both are mounted **only after the user has signed in** — anonymous landing-page traffic is not tracked.
+- Both honour `Do Not Track` (DNT) and `prefers-reduced-data` automatically (Vercel's stated behaviour) and we do not override.
+- No custom events that would correlate file-content shape (sizes, recipients, frequencies) are emitted; only page-view and standard Web Vitals.
+- A Settings → Privacy toggle to disable telemetry per-user lands in v2.
+- The privacy/help drawer (§8.5) explicitly tells users that anonymized page navigation + Web Vitals are sent to Vercel's analytics.
+
+**Wiring (lands in Plan 3f):**
+1. Add `@vercel/analytics` and `@vercel/speed-insights` to `apps/send` deps.
+2. In a top-level `<AuthenticatedShell>` component (the inbox/outbox/send routes), include:
+   ```tsx
+   import { Analytics } from '@vercel/analytics/react';
+   import { SpeedInsights } from '@vercel/speed-insights/react';
+   ...
+   <>
+     <Analytics />
+     <SpeedInsights />
+     <Outlet />
+   </>
+   ```
+3. The unauthenticated routes (`/login`, `/signup`, `/recovery`) do NOT mount these.
+4. Update the CSP `connect-src` to allow `https://va.vercel-scripts.com` and `https://vitals.vercel-insights.com` (Vercel's collector endpoints; subject to change — verify against Vercel docs at deploy time).
+5. Vercel project settings → Analytics + Speed Insights toggled on (the libraries no-op without it).
+
+**v2 considerations:**
+- Real consent dialog with explicit opt-in.
+- Aggregated funnel events (signup completion, first-send completion) gated behind that opt-in.
+- Self-hostable analytics (Plausible / Umami) as an alternative for the OSS self-host path.
 
 ## 12. Failure modes
 
