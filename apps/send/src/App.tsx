@@ -1,32 +1,13 @@
-import { useEffect, useState } from 'react';
-import { ipc } from './ipc.js';
+import { APP_VERSION } from '@spourgiti/shared';
 
 export function App() {
-  const [version, setVersion] = useState<string>('?');
-  const [updateStatus, setUpdateStatus] = useState<string>('');
-
-  useEffect(() => {
-    ipc.ping('hello').then((r) => setVersion(r.appVersion));
-  }, []);
-
-  async function handleCheck() {
-    setUpdateStatus('checking…');
-    const r = await ipc.checkForUpdate();
-    if (r.status === 'available') {
-      setUpdateStatus(`v${r.version} available`);
-    } else if (r.status === 'no-update') {
-      setUpdateStatus('up to date');
-    } else {
-      setUpdateStatus(`error: ${r.error ?? 'unknown'}`);
-    }
-  }
-
   return (
-    <main style={{ fontFamily: 'system-ui', padding: 24 }}>
-      <h1>SPOURGITI</h1>
-      <p>Version: <code>{version}</code></p>
-      <button onClick={handleCheck}>Check for update</button>
-      <p>{updateStatus}</p>
+    <main style={{ fontFamily: '"EB Garamond", Garamond, "Times New Roman", serif', padding: '4rem 2rem', maxWidth: 720, margin: '0 auto', backgroundColor: '#f6f1e7', color: '#1a1a1a', minHeight: '100vh' }}>
+      <h1 style={{ fontFamily: '"Cormorant Garamond", Garamond, serif', fontWeight: 600 }}>Spourgiti Send</h1>
+      <p>End-to-end encrypted file sharing. Web edition v{APP_VERSION}.</p>
+      <p style={{ color: '#5a5a5a' }}>
+        The real UI lands in Plans 3c–3f. This page exists to prove the build chain works end-to-end.
+      </p>
     </main>
   );
 }
