@@ -77,64 +77,72 @@ body {
   z-index: 0;
 }
 
-/* Lunar painting reduced to a small circular art accent — sepia/multiply
-   blended into the cream so it reads as a watermark, not a backdrop.
-   Mobile: top-right corner, smaller. Desktop: larger and offset. */
-.page::after {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  pointer-events: none;
-  width: clamp(180px, 38vw, 360px);
-  aspect-ratio: 1;
-  top: clamp(-2.5rem, -5vh, -1rem);
-  right: clamp(-3rem, -7vw, -2rem);
-  background: url('/bg.webp') 38% 32% / 220% no-repeat;
-  border-radius: 50%;
-  filter: sepia(0.55) saturate(0.7) brightness(1.05) contrast(0.95);
-  mix-blend-mode: multiply;
-  opacity: 0.55;
-  box-shadow: inset 0 0 60px rgba(246, 241, 231, 0.45);
+/* ---------- Stack: hero left, form right (desktop) / stacked (mobile) */
+
+.page__stack {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: min(64rem, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(1.25rem, 4vh, 2.25rem);
 }
 
-@media (min-width: 720px) {
-  .page::after {
-    width: clamp(360px, 36vw, 520px);
-    top: clamp(-4rem, -8vh, -2rem);
-    right: clamp(-5rem, -8vw, -3rem);
-    opacity: 0.50;
+@media (min-width: 760px) {
+  .page__stack {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: clamp(2rem, 6vw, 5rem);
   }
 }
 
 /* ---------- Hero brand (calligraphic spotlight) ---------------------- */
 
 .page__hero {
-  position: relative;
-  z-index: 2;
   width: 100%;
   text-align: center;
-  margin-bottom: clamp(1.25rem, 3vh, 2rem);
+  flex: 1 1 auto;
+  min-width: 0;          /* prevent flex overflow */
+}
+
+@media (min-width: 760px) {
+  .page__hero {
+    text-align: left;
+    flex: 1 1 0;
+  }
 }
 
 .hero {
   font-family: var(--script);
   font-weight: 400;
-  font-size: clamp(4.5rem, 17vw, 9rem);
-  line-height: 0.85;
+  font-size: clamp(4rem, 13vw, 8rem);
+  line-height: 0.82;
   letter-spacing: 0;
   color: var(--ink);
   margin: 0;
+  word-break: break-word;        /* never overflow */
+}
+
+@media (min-width: 760px) {
+  .hero { font-size: clamp(4.5rem, 10vw, 9rem); }
 }
 
 .tagline {
   font-family: var(--serif-display);
   font-style: italic;
   font-weight: 400;
-  font-size: clamp(0.95rem, 2.4vw, 1.1rem);
+  font-size: clamp(0.92rem, 2.3vw, 1.1rem);
   letter-spacing: 0.04em;
   color: var(--ink-soft);
   text-align: center;
-  margin: 0.4rem 0 0;
+  margin: 0.6rem 0 0;
+}
+
+@media (min-width: 760px) {
+  .tagline { text-align: left; }
 }
 
 /* Refined hairline + fleuron beneath the tagline. */
@@ -143,7 +151,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.9rem;
-  margin: 1rem auto 0;
+  margin: 0.85rem auto 0;
   max-width: 14rem;
   color: var(--ink-faint);
 }
@@ -161,19 +169,22 @@ body {
   color: var(--accent);
 }
 
-/* Compact form panel — clean cream card, centered, refined shadow. */
+@media (min-width: 760px) {
+  .hero-rule { margin: 1rem 0 0; max-width: 12rem; }
+}
+
+/* Compact form panel — clean cream card, refined shadow. */
 .page__card {
-  position: relative;
-  z-index: 2;
   width: 100%;
   max-width: 22rem;
   padding: 1.5rem 1.5rem 1.65rem;
   background: var(--paper);
   border: 1px solid rgba(26, 26, 26, 0.10);
   box-shadow: 0 12px 40px -16px rgba(26, 26, 26, 0.18);
+  flex: 0 0 auto;
 }
 
-@media (min-width: 720px) {
+@media (min-width: 760px) {
   .page__card {
     max-width: 24rem;
     padding: 2rem 2rem 2.15rem;
