@@ -25,15 +25,28 @@ export type SignUpResult =
     }
   | {
       ok: false;
-      reason: 'username_taken' | 'email_in_use' | 'auth_error' | 'rpc_error';
+      reason: 'email_in_use' | 'auth_error' | 'rpc_error';
       message: string;
     };
 
-export async function signUp(
-  email: string,
-  username: string,
-  password: string,
-): Promise<SignUpResult> {
+/**
+ * Derive a profile username from the email's local part. Sanitized to
+ * `[a-z0-9_]`, truncated to 14 chars, and suffixed with 6 random hex
+ * digits to keep the global uniqueness invariant in profiles.username
+ * without making the user pick or even see one. Length stays inside
+ * the 3–20 char check the RPC enforces.
+ */
+function deriveUsername(email: string): string {
+  const local = email.split('@')[0] ?? 'user';
+  const base = local.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 14) || 'user';
+  const seed = base.length < 3 ? (base + 'usr').slice(0, 3) : base;
+  const suffix = Array.from(crypto.getRandomValues(new Uint8Array(3)))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+  return `${seed}_${suffix}`;
+}
+
+export async function signUp(email: string, password: string): Promise<SignUpResult> {
   const sb = getSupabaseClient();
   const id = await buildNewIdentity(password);
 
@@ -46,23 +59,30 @@ export async function signUp(
     return { ok: false, reason: 'auth_error', message: msg };
   }
 
-  try {
-    await createProfile(sb, {
-      username,
-      ed25519_public_key: '\\x' + bytesToHex(id.publicKey),
-      recovery_blob: '\\x' + bytesToHex(id.recoveryBlob),
-      recovery_kdf_params: {
-        salt: id.recoveryKdfParams.salt as never,
-        ops_limit: id.recoveryKdfParams.ops_limit,
-        mem_limit: id.recoveryKdfParams.mem_limit,
-      },
-    });
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    if (/username_taken/.test(msg)) {
-      return { ok: false, reason: 'username_taken', message: msg };
+  // 6 hex digits = 16M possibilities; collision is negligible. Retry
+  // once on the off-chance to keep the contract simple.
+  let username = deriveUsername(email);
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      await createProfile(sb, {
+        username,
+        ed25519_public_key: '\\x' + bytesToHex(id.publicKey),
+        recovery_blob: '\\x' + bytesToHex(id.recoveryBlob),
+        recovery_kdf_params: {
+          salt: id.recoveryKdfParams.salt as never,
+          ops_limit: id.recoveryKdfParams.ops_limit,
+          mem_limit: id.recoveryKdfParams.mem_limit,
+        },
+      });
+      break;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (/username_taken/.test(msg) && attempt === 0) {
+        username = deriveUsername(email); // re-roll suffix
+        continue;
+      }
+      return { ok: false, reason: 'rpc_error', message: msg };
     }
-    return { ok: false, reason: 'rpc_error', message: msg };
   }
 
   await keystore.storeEncryptedKey(id.encryptedKeyForPassword);
