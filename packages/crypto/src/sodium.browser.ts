@@ -1,15 +1,10 @@
-import * as sodiumNs from 'libsodium-wrappers-sumo';
-
-// The sumo build is shipped as UMD/CJS; depending on bundler interop the
-// import lands as the sodium object directly OR wrapped under .default.
-// Unwrap defensively so `.ready` is always reachable.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const sodium: any = (sodiumNs as any).default ?? sodiumNs;
+import sodium from 'libsodium-wrappers-sumo';
 
 let instance: typeof sodium | null = null;
 let pending: Promise<typeof sodium> | null = null;
 
-/** Browser entrypoint: native ESM import, no createRequire shim. */
+/** Browser entrypoint: native ESM import (Vite plugin patches the
+ * upstream broken sibling-import in libsodium-wrappers-sumo's .mjs). */
 export async function getSodium(): Promise<typeof sodium> {
   if (instance) return instance;
   if (!pending) {

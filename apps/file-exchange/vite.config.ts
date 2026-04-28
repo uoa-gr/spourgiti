@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath } from 'node:url';
 
@@ -9,28 +9,38 @@ import { fileURLToPath } from 'node:url';
 //     when a custom domain is in use).
 const base = process.env.PAGES_BASE_URL ?? '/';
 
-// libsodium-wrappers-sumo v0.7.x ships a broken ESM build (the .mjs entry
-// imports a non-existent libsodium.mjs sibling). Alias the bare specifier
-// to the working CJS dist via an absolute filesystem path so esbuild can
-// transform it for the browser.
-const sumoCjs = fileURLToPath(
+// libsodium-wrappers-sumo v0.7.x ESM entry imports './libsodium-sumo.mjs'
+// as a sibling, but that file lives in the *separate* libsodium-sumo
+// package's dist directory. Rewrite the relative import at resolve time.
+const sumoSiblingMjs = fileURLToPath(
   new URL(
-    '../../node_modules/libsodium-wrappers-sumo/dist/modules-sumo/libsodium-wrappers.js',
+    '../../node_modules/libsodium-sumo/dist/modules-sumo-esm/libsodium-sumo.mjs',
     import.meta.url,
   ),
 );
 
+function fixLibsodiumEsm(): Plugin {
+  return {
+    name: 'fix-libsodium-esm',
+    enforce: 'pre',
+    resolveId(source, importer) {
+      if (
+        source === './libsodium-sumo.mjs' &&
+        importer &&
+        importer.includes('libsodium-wrappers-sumo')
+      ) {
+        return sumoSiblingMjs;
+      }
+      return null;
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [fixLibsodiumEsm(), react()],
   base,
   build: { outDir: 'dist', emptyOutDir: true, target: 'es2022' },
   server: { port: 5173, strictPort: true },
-  resolve: {
-    conditions: ['browser', 'import', 'default'],
-    alias: {
-      'libsodium-wrappers-sumo': sumoCjs,
-    },
-  },
   optimizeDeps: {
     include: ['libsodium-wrappers-sumo'],
   },
